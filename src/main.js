@@ -3,31 +3,7 @@ import App from './App.vue';
 import { createPinia } from 'pinia'; // 引入 Pinia
 import { useGameStore } from './store/gameStore';
 
-// --- Vuetify 設定 (與之前保持一致) ---
-import 'vuetify/styles';
-import { createVuetify } from 'vuetify';
-import * as components from 'vuetify/components';
-import * as directives from 'vuetify/directives';
-
-const vuetify = createVuetify({
-    components,
-    directives,
-    theme: {
-        defaultTheme: 'customTheme',
-        themes: {
-            customTheme: {
-                dark: false,
-                colors: {
-                    background: '#faf8ef',
-                    surface: '#bbada0',
-                    primary: '#8f7a66',
-                    secondary: '#776e65',
-                }
-            }
-        }
-    }
-});
-// --------------------
+import vuetify from './plugins/vuetify';
 
 const pinia = createPinia(); // 建立 Pinia 實例
 

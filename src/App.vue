@@ -11,7 +11,10 @@
             <v-container class="pa-5 elevation-12 rounded-lg" style="background-color: #faf8ef; width: 100%;">
                 <div class="d-flex justify-space-between align-center mb-5">
                     <h1 class="text-h2 font-weight-bold" style="color: #776e65;">2048</h1>
-                    <ScoreBoard />
+                    <div class="d-flex">
+                        <v-btn @click="toggleTheme" icon="mdi-theme-light-dark" class="mr-2" color="primary"></v-btn>
+                        <ScoreBoard />
+                    </div>
                 </div>
 
                 <v-row dense class="mb-4">
@@ -37,10 +40,17 @@
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue';
+import { useTheme } from 'vuetify'
 import { storeToRefs } from 'pinia';
 import { useGameStore } from './store/gameStore';
 import GameBoard from './components/GameBoard.vue';
 import ScoreBoard from './components/ScoreBoard.vue';
+
+const theme = useTheme()
+
+function toggleTheme() {
+    theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+}
 
 const gameStore = useGameStore(); // 獲取 Store 實例
 
