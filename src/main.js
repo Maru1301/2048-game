@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import { createPinia } from 'pinia'; // 引入 Pinia
+import { useGameStore } from './store/gameStore';
 
 // --- Vuetify 設定 (與之前保持一致) ---
 import 'vuetify/styles';
@@ -35,6 +36,7 @@ app.use(pinia); // 使用 Pinia
 app.use(vuetify);
 app.mount('#app');
 
-// Pinia 載入後，手動觸發新遊戲
-const gameStore = pinia.useGameStore(); // 獲取 Store 實例
-gameStore.newGame();
+// Pinia 載入後，手動觸發載入上次的遊戲狀態
+// Store 已經透過 app.use(pinia) 註冊，我們直接呼叫 useGameStore 即可
+const gameStore = useGameStore(); // 獲取 Store 實例
+await gameStore.loadGame();

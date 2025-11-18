@@ -1,34 +1,63 @@
 import { defineStore } from 'pinia';
-import { rotateGrid, executeMove, addRandomTile, isGameOver, createTile } from '../gameLogic';
+import { toRaw } from 'vue';
+import { createTile, rotateGrid, executeMove, addRandomTile, isGameOver } from '../gameLogic';
 
-// 從 localStorage 載入/儲存分數的輔助函式 (保持不變)
-const saveBestScoreToStorage = (score) => {
-    if (typeof localStorage !== 'undefined') {
-        const currentBest = parseInt(localStorage.getItem('bestScore') || '0', 10);
-        if (score > currentBest) {
-            localStorage.setItem('bestScore', score);
-        }
+// 儲存整個遊戲狀態到 Chrome Storage
+const saveGameStateToStorage = (state) => {
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+        // --- 核心修復：使用 toRaw 確保 tiles 是一個純淨的 JS 陣列 ---
+        const gridData = [];
+        state.tiles.forEach(tile => {
+            gridData.push({
+                r: tile.row,
+                c: tile.col,
+                value: tile.value
+            })
+        })
+
+        // 只儲存遊戲運行所需的狀態
+        const dataToSave = {
+            grid: gridData, // 使用 tiles 列表
+            score: state.score,
+            won: state.won,
+            isGameOver: state.isGameOver,
+            previousState: state.previousState,
+            // 注意：我們不需要儲存 previousState 和 bestScore (bestScore單獨處理)
+        };
+        chrome.storage.local.set({ gameState: dataToSave });
     }
 };
 
-const loadBestScoreFromStorage = () => {
-    if (typeof localStorage !== 'undefined') {
-        return parseInt(localStorage.getItem('bestScore') || '0', 10);
-    }
-    return 0;
+// 從 Chrome Storage 載入整個遊戲狀態
+const loadGameStateFromStorage = () => {
+    return new Promise((resolve) => {
+        if (typeof chrome !== 'undefined' && chrome.storage) {
+            // 請求 gameState 和 bestScore
+            chrome.storage.local.get(['gameState', 'bestScore'], (result) => {
+                resolve({
+                    gameState: result.gameState,
+                    bestScore: result.bestScore || 0
+                });
+            });
+        } else {
+            // 非擴充功能環境的備用/初始狀態
+            resolve({ gameState: null, bestScore: 0 });
+        }
+    });
 };
 
 // 定義 Pinia Store
 export const useGameStore = defineStore('game', {
     // === 狀態 (State) ===
     state: () => ({
-        // 核心狀態：一維方塊物件列表
+        // 初始狀態應為空，等待非同步載入
         tiles: [],
         score: 0,
-        bestScore: loadBestScoreFromStorage(),
-        previousState: null, // 用於 Undo
+        bestScore: 0, // 初始設為 0，等待載入
+        previousState: null,
         isGameOver: false,
         won: false,
+        initialized: false, // 新增：追蹤狀態是否已從 storage 載入
     }),
 
     // === 計算屬性 (Getters) ===
@@ -44,11 +73,56 @@ export const useGameStore = defineStore('game', {
 
     // === 方法 (Actions) ===
     actions: {
-        updateScore(newScore) {
+
+        // 核心改變：處理狀態儲存
+        updateGameState(newTiles, newScore, moved, won, isGameOver) {
+            this.tiles = newTiles;
             this.score = newScore;
-            saveBestScoreToStorage(newScore);
+            this.won = won;
+            this.isGameOver = isGameOver;
+
+            // 1. 遊戲狀態發生變化後，非同步儲存
+            if (moved) {
+                // 儲存當前狀態
+                saveGameStateToStorage(this);
+            }
+
+            // 2. 最佳分數更新邏輯：
             if (newScore > this.bestScore) {
                 this.bestScore = newScore;
+
+                // 確保同時將新的最佳分數儲存到 chrome.storage
+                if (typeof chrome !== 'undefined' && chrome.storage) {
+                    chrome.storage.local.set({ bestScore: newScore });
+                }
+            }
+        },
+
+        // 新增 Action：載入遊戲狀態
+        async loadGame() {
+            const { gameState, bestScore } = await loadGameStateFromStorage();
+
+            this.bestScore = bestScore; // 載入最佳分數
+            this.initialized = true;
+
+            if (gameState && Array.isArray(gameState.grid)) {
+                console.log("Found saved game state. Loading..."); // <--- 建議新增此行用於除錯
+
+                // 載入上次的遊戲狀態
+                gameState.grid.forEach(tileData => {
+                    const newTile = createTile(tileData.r, tileData.c, tileData.value);
+                    this.tiles.push(newTile);
+                })
+
+                this.score = gameState.score;
+                this.won = gameState.won;
+                this.isGameOver = gameState.isGameOver;
+                this.previousState = gameState.previousState;
+
+            } else {
+                console.log("No valid saved game found. Starting new game."); // <--- 建議新增此行用於除錯
+                // 如果沒有儲存的遊戲，則開始新遊戲
+                this.newGame(false);
             }
         },
 
@@ -68,12 +142,12 @@ export const useGameStore = defineStore('game', {
                 this.won = this.previousState.won;
                 this.isGameOver = false;
                 this.previousState = null;
+                saveGameStateToStorage(this);
             }
         },
 
-        // 初始化/新遊戲
-        newGame() {
-            // 清空方塊
+        // 調整 newGame，使其可以在載入時被呼叫，且不會再次觸發載入
+        newGame(isManual = true) {
             this.tiles = [];
             this.score = 0;
             this.isGameOver = false;
@@ -81,6 +155,12 @@ export const useGameStore = defineStore('game', {
             this.previousState = null;
             this.addTile();
             this.addTile();
+
+            // 只有手動開始新遊戲時才清空儲存（可選：讓使用者隨時能恢復舊遊戲）
+            if (isManual) {
+                // 清除儲存的狀態，因為已經開始新遊戲
+                saveGameStateToStorage({ tiles: [], score: 0 });
+            }
         },
 
         // 在空白處添加一個隨機方塊
@@ -128,7 +208,6 @@ export const useGameStore = defineStore('game', {
                 }
             }
 
-
             // 4. 執行核心移動邏輯 (向左)
             const { newTiles, newScore, moved, won } = executeMove(rotatedTiles, this.score);
 
@@ -158,19 +237,18 @@ export const useGameStore = defineStore('game', {
                     });
                 });
 
-                this.tiles = finalTiles;
-                this.updateScore(newScore);
-
-                if (won && !this.won) {
-                    this.won = true;
-                    this.isGameOver = true;
-                }
-
+                this.tiles = finalTiles; // 更新 tiles 陣列
+                this.score = newScore;
+                this.won = won;
                 this.addTile();
 
-                if (!this.won && isGameOver(this.tiles)) {
+                const isGameReallyOver = !this.won && isGameOver(this.tiles);
+                if (isGameReallyOver) {
                     this.isGameOver = true;
                 }
+
+                this.updateGameState(this.tiles, this.score, true, this.won, this.isGameOver);
+
             } else {
                 this.previousState = null;
             }
