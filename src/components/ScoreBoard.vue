@@ -22,8 +22,8 @@ const { score, bestScore } = storeToRefs(gameStore);
 
 <style scoped>
 .score-container {
-    background: #bbada0;
-    color: white;
+    background-color: rgb(var(--v-theme-surface));
+    color: rgb(var(--v-theme-on-surface));
     padding: 8px 12px;
     border-radius: 5px;
     text-align: center;

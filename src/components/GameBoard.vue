@@ -41,7 +41,7 @@ onMounted(() => {
 
 <style scoped>
 .game-board {
-    background: #bbada0;
+    background-color: rgb(var(--v-theme-surface));
     border-radius: 10px;
     padding: 10px;
     display: grid;
@@ -54,7 +54,7 @@ onMounted(() => {
 }
 
 .cell {
-    background: rgba(238, 228, 218, 0.35);
+    background-color: rgba(var(--v-theme-on-surface), 0.1);
     border-radius: 5px;
     aspect-ratio: 1;
 }
