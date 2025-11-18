@@ -1,0 +1,16 @@
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "pinia": "^3.0.4",
+    "sass": "^1.94.0",
+    "vue": "^3.5.24",
+    "vuetify": "^3.11.0-beta.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "vite": "^7.2.2"
+  }
+}
