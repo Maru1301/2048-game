@@ -8,11 +8,14 @@
     }">
         <v-main>
 
-            <v-container class="pa-5 elevation-12 rounded-lg" style="background-color: #faf8ef; width: 100%;">
+            <v-container class="pa-5 elevation-12 rounded-lg"
+                style="background-color: rgb(var(--v-theme-background)); width: 100%;">
                 <div class="d-flex justify-space-between align-center mb-5">
                     <h1 class="text-h2 font-weight-bold" style="color: #776e65;">2048</h1>
                     <div class="d-flex">
-                        <v-btn @click="toggleTheme" icon="mdi-theme-light-dark" class="mr-2" color="primary"></v-btn>
+                        <v-switch v-model="isDarkTheme" :label="isDarkTheme ? 'Dark' : 'Light'"
+                            icon="mdi-theme-light-dark" density="compact" class="mr-4 mt-0"
+                            color="secondary"></v-switch>
                         <ScoreBoard />
                     </div>
                 </div>
@@ -39,7 +42,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useTheme } from 'vuetify'
 import { storeToRefs } from 'pinia';
 import { useGameStore } from './store/gameStore';
@@ -48,9 +51,21 @@ import ScoreBoard from './components/ScoreBoard.vue';
 
 const theme = useTheme()
 
-function toggleTheme() {
-    theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
-}
+// 1. 定義主題狀態
+// 初始值從 Vuetify 當前使用的全域主題名稱獲取 (該名稱已由 main.js 正確設置)
+const isDarkTheme = ref(theme.global.name.value === 'dark');
+
+// 2. 監聽 isDarkTheme 變化，執行切換並儲存狀態
+watch(isDarkTheme, (isDark) => {
+    // A. 切換 Vuetify 主題
+    const newThemeName = isDark ? 'dark' : 'light';
+    theme.global.name.value = newThemeName;
+
+    // B. 儲存主題到 Chrome Storage
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+        chrome.storage.local.set({ theme: newThemeName });
+    }
+}, { immediate: true }); // { immediate: true } 確保組件初始化時，狀態被同步到 Vuetify
 
 const gameStore = useGameStore(); // 獲取 Store 實例
 
@@ -60,7 +75,6 @@ const { canUndo, isGameOver } = storeToRefs(gameStore);
 // 直接使用 Store 上的 Action
 const newGame = () => gameStore.newGame();
 const undo = () => gameStore.undo();
-
 
 // 鍵盤控制
 const handleKeydown = (e) => {

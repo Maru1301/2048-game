@@ -37,8 +37,8 @@ const lightTileColors = {
 };
 
 const darkTileColors = {
-    2: { bg: '#2E2E2E', color: '#E0E0E0', fontSize: '32px' },
-    4: { bg: '#3C3C3C', color: '#E0E0E0', fontSize: '32px' },
+    2: { bg: '#003cadff', color: '#E0E0E0', fontSize: '32px' },
+    4: { bg: '#1e69d9', color: '#E0E0E0', fontSize: '32px' },
     8: { bg: '#BB86FC', color: '#121212', fontSize: '32px' },
     16: { bg: '#90CAF9', color: '#121212', fontSize: '32px' },
     32: { bg: '#81C784', color: '#121212', fontSize: '32px' },

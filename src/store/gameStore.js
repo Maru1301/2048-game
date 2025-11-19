@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia';
-import { toRaw } from 'vue';
 import { createTile, rotateGrid, executeMove, addRandomTile, isGameOver } from '../gameLogic';
 
 // 儲存整個遊戲狀態到 Chrome Storage
@@ -21,8 +20,6 @@ const saveGameStateToStorage = (state) => {
             score: state.score,
             won: state.won,
             isGameOver: state.isGameOver,
-            previousState: state.previousState,
-            // 注意：我們不需要儲存 previousState 和 bestScore (bestScore單獨處理)
         };
         chrome.storage.local.set({ gameState: dataToSave });
     }
@@ -36,7 +33,8 @@ const loadGameStateFromStorage = () => {
             chrome.storage.local.get(['gameState', 'bestScore'], (result) => {
                 resolve({
                     gameState: result.gameState,
-                    bestScore: result.bestScore || 0
+                    bestScore: result.bestScore || 0,
+                    previousState: null
                 });
             });
         } else {
