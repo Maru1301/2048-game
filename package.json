@@ -1,7 +1,8 @@
 {
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "vitest"
   },
   "dependencies": {
     "pinia": "^3.0.4",
@@ -11,6 +12,9 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
-    "vite": "^7.2.2"
+    "@vue/test-utils": "^2.4.6",
+    "jsdom": "^27.2.0",
+    "vite": "^7.2.2",
+    "vitest": "^4.0.15"
   }
 }
