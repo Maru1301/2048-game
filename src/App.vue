@@ -32,6 +32,15 @@
 
                 <GameBoard />
 
+                <v-dialog v-model="showGameOverDialog" persistent max-width="320">
+                    <v-card>
+                        <v-card-title class="text-h6">Game Over!</v-card-title>
+                        <v-card-actions>
+                            <v-spacer />
+                            <v-btn color="primary" @click="newGame">New Game</v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
                 <v-alert density="compact" type="info" variant="text" class="mt-4 text-center">
                     Use arrow keys to play
                 </v-alert>
@@ -72,8 +81,19 @@ const gameStore = useGameStore(); // 獲取 Store 實例
 // 使用 storeToRefs 來解構 state 和 getters，保持響應性
 const { canUndo, isGameOver } = storeToRefs(gameStore);
 
+// 本地控制對話框的顯示狀態
+const showGameOverDialog = ref(false);
+
+// 監聽 Store 的 isGameOver，當遊戲結束時開啟對話框
+watch(isGameOver, (val) => {
+    if (val) showGameOverDialog.value = true;
+});
+
 // 直接使用 Store 上的 Action
-const newGame = () => gameStore.newGame();
+const newGame = () => {
+    showGameOverDialog.value = false;
+    gameStore.newGame();
+};
 const undo = () => gameStore.undo();
 
 // 鍵盤控制
