@@ -24,9 +24,15 @@
                     <v-col cols="6">
                         <v-btn @click="newGame" color="primary" class="font-weight-bold" block>New Game</v-btn>
                     </v-col>
+
                     <v-col cols="6">
-                        <v-btn @click="undo" :disabled="!canUndo" color="primary" class="font-weight-bold"
-                            block>Undo</v-btn>
+                        <v-badge :content="canUndoTimes" :value="canUndoTimes > 0" offset-x="1" offset-y="1"
+                            color="secondary" bordered class="d-flex justify-end">
+                            <v-btn @click="undo" :disabled="!canUndo" color="primary" class="font-weight-bold" block
+                                width="200px">
+                                Undo
+                            </v-btn>
+                        </v-badge>
                     </v-col>
                 </v-row>
 
@@ -79,7 +85,7 @@ watch(isDarkTheme, (isDark) => {
 const gameStore = useGameStore(); // 獲取 Store 實例
 
 // 使用 storeToRefs 來解構 state 和 getters，保持響應性
-const { canUndo, isGameOver } = storeToRefs(gameStore);
+const { canUndo, canUndoTimes, isGameOver } = storeToRefs(gameStore);
 
 // 本地控制對話框的顯示狀態
 const showGameOverDialog = ref(false);

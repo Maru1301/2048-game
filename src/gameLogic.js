@@ -99,9 +99,11 @@ export const isGameOver = (tiles) => {
  * 執行一次移動操作 (向左)
  * @param {object[]} currentTiles - 原始方塊列表
  * @param {number} currentScore - 當前分數
- * @returns {{newTiles: object[], newScore: number, moved: boolean, won: boolean}} - 新的狀態
+ * @param {number} awardTile - 當前獎勵方塊值
+ * @param {number} canUndoTimes - 當前可撤銷次數
+ * @returns {{newTiles: object[], awardTile: number, canUndoTimes: number, newScore: number, moved: boolean, won: boolean}} - 新的狀態
  */
-export const executeMove = (currentTiles, currentScore) => {
+export const executeMove = (currentTiles, currentScore, awardTile, canUndoTimes) => {
     let newScore = currentScore;
     let moved = false;
     let won = false;
@@ -134,6 +136,10 @@ export const executeMove = (currentTiles, currentScore) => {
             if (rowTiles[i].value === rowTiles[i + 1].value && !rowTiles[i].merged && !rowTiles[i + 1].merged) {
                 // 合併後的方塊使用第一個方塊的 ID (保持 ID 穩定性)
                 rowTiles[i].value *= 2;
+                if (rowTiles[i].value === awardTile) {
+                    canUndoTimes += 1;
+                    awardTile *= 2;
+                }
                 newScore += rowTiles[i].value;
                 rowTiles[i].merged = true; // 標記為合併後的結果
                 rowTiles[i].mergedFrom = [rowTiles[i + 1].id]; // 追蹤被合併的方塊 ID
@@ -177,6 +183,8 @@ export const executeMove = (currentTiles, currentScore) => {
 
     return {
         newTiles: finalTiles,
+        awardTile,
+        canUndoTimes,
         newScore,
         moved,
         won

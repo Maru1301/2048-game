@@ -18,6 +18,7 @@ const saveGameStateToStorage = (state) => {
         const dataToSave = {
             grid: gridData, // 使用 tiles 列表
             score: state.score,
+            canUndoTimes: state.canUndoTimes,
             won: state.won,
             isGameOver: state.isGameOver,
         };
@@ -50,6 +51,8 @@ export const useGameStore = defineStore('game', {
     state: () => ({
         // 初始狀態應為空，等待非同步載入
         tiles: [],
+        awardTile: 32,
+        canUndoTimes: 3,
         score: 0,
         bestScore: 0, // 初始設為 0，等待載入
         previousState: null,
@@ -60,12 +63,8 @@ export const useGameStore = defineStore('game', {
 
     // === 計算屬性 (Getters) ===
     getters: {
-        // tiles getter 直接返回 state.tiles，因為它已經是一個物件列表
-        // 這裡不再需要複雜的轉換。
-        // tiles: (state) => state.tiles, 
-
         canUndo(state) {
-            return state.previousState !== null;
+            return state.previousState !== null && state.canUndoTimes > 0;
         }
     },
 
@@ -101,6 +100,7 @@ export const useGameStore = defineStore('game', {
             const { gameState, bestScore } = await loadGameStateFromStorage();
 
             this.bestScore = bestScore; // 載入最佳分數
+            this.canUndoTimes = gameState?.canUndoTimes || 3; // 載入可撤銷次數，預設為 3
             this.initialized = true;
 
             if (gameState && Array.isArray(gameState.grid)) {
@@ -140,6 +140,9 @@ export const useGameStore = defineStore('game', {
                 this.won = this.previousState.won;
                 this.isGameOver = false;
                 this.previousState = null;
+                if (this.canUndoTimes > 0) {
+                    this.canUndoTimes -= 1;
+                }
                 saveGameStateToStorage(this);
             }
         },
@@ -207,7 +210,9 @@ export const useGameStore = defineStore('game', {
             }
 
             // 4. 執行核心移動邏輯 (向左)
-            const { newTiles, newScore, moved, won } = executeMove(rotatedTiles, this.score);
+            const { newTiles, awardTile, canUndoTimes, newScore, moved, won } = executeMove(rotatedTiles, this.score, this.awardTile, this.canUndoTimes);
+            this.awardTile = awardTile;
+            this.canUndoTimes = canUndoTimes;
 
             // 5. 將結果網格旋轉回去
             if (moved) {
