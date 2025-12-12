@@ -38,7 +38,7 @@
 
                 <GameBoard />
 
-                <v-dialog v-model="showGameOverDialog" persistent max-width="320">
+                <Modal v-model="showGameOverDialog" persistent max-width="320">
                     <v-card>
                         <v-card-title class="text-h6">Game Over!</v-card-title>
                         <v-card-actions>
@@ -46,7 +46,7 @@
                             <v-btn color="primary" @click="newGame">New Game</v-btn>
                         </v-card-actions>
                     </v-card>
-                </v-dialog>
+                </Modal>
                 <v-alert density="compact" type="info" variant="text" class="mt-4 text-center">
                     Use arrow keys to play
                 </v-alert>
@@ -63,6 +63,7 @@ import { storeToRefs } from 'pinia';
 import { useGameStore } from './store/gameStore';
 import GameBoard from './components/GameBoard.vue';
 import ScoreBoard from './components/ScoreBoard.vue';
+import Modal from './components/Modal.vue';
 
 const theme = useTheme()
 
