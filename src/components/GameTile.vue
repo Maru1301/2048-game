@@ -7,15 +7,16 @@
 <script setup>
 import { computed } from 'vue';
 import { useTheme } from 'vuetify';
+import { BoardSize, BoardWidth } from '../gameLogic.js';
 
 const props = defineProps({
     tile: {
         type: Object,
         required: true,
     },
-    boardSize: {
+    boardWidth: {
         type: Number,
-        default: 430, // 假設棋盤的基礎尺寸
+        default: BoardWidth, // 假設棋盤的基礎尺寸
     }
 });
 
@@ -56,7 +57,7 @@ const tileStyle = computed(() => {
     const margin = 10; // 邊距
     const gap = 10;    // 間隔
     // 總寬度 - 2*邊距 / 4 (格子數)
-    const cellSize = (props.boardSize - 2 * margin - 3 * gap) / 4;
+    const cellSize = (props.boardWidth - (BoardSize - 2) * margin - 3 * gap) / BoardSize;
     const tileColors = theme.global.current.value.dark ? darkTileColors : lightTileColors;
     const colors = tileColors[props.tile.value] || tileColors[4096];
 

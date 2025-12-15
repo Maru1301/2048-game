@@ -1,9 +1,9 @@
 <template>
-    <div class="game-board" ref="boardRef">
-        <div v-for="i in 16" :key="i" class="cell"></div>
+    <div class="game-board" ref="boardRef" :style="{ '--board-size': BoardSize }">
+        <div v-for="i in BoardSize * BoardSize" :key="i" class="cell"></div>
 
         <transition-group name="tile">
-            <GameTile v-for="tile in tiles" :key="tile.id" :tile="tile" :board-size="boardSize" />
+            <GameTile v-for="tile in tiles" :key="tile.id" :tile="tile" :boardWidth="boardWidth" />
         </transition-group>
 
     </div>
@@ -11,29 +11,30 @@
 
 <script setup>
 import { computed, ref, onMounted } from 'vue';
-import { storeToRefs } from 'pinia'; // 引入 Pinia 輔助函式
+//import { storeToRefs } from 'pinia'; // 引入 Pinia 輔助函式
 import { useGameStore } from '../store/gameStore'; // 引入 Pinia Store
 import GameTile from './GameTile.vue';
+import { BoardSize, BoardWidth } from '../gameLogic.js';
 
 const gameStore = useGameStore();
 
 // 使用 storeToRefs 獲取 state 屬性，保持響應性
-const { isGameOver, won } = storeToRefs(gameStore);
+//const { isGameOver, won } = storeToRefs(gameStore);
 // 直接使用 getter
 const tiles = computed(() => gameStore.tiles);
 
-const gameOverMessage = computed(() => won.value ? 'You Win!' : 'Game Over!');
+//const gameOverMessage = computed(() => won.value ? 'You Win!' : 'Game Over!');
 
-const newGame = () => gameStore.newGame(); // 直接呼叫 Pinia Action
+//const newGame = () => gameStore.newGame(); // 直接呼叫 Pinia Action
 
 // 獲取盤面寬度，以便計算方塊位置和大小
 const boardRef = ref(null);
-const boardSize = ref(430);
+const boardWidth = ref(BoardWidth);
 
 onMounted(() => {
     // 確保在組件掛載後獲取實際的盤面寬度 (用於響應式計算方塊大小)
     if (boardRef.value) {
-        boardSize.value = boardRef.value.offsetWidth;
+        boardWidth.value = boardRef.value.offsetWidth;
     }
 });
 
@@ -45,7 +46,7 @@ onMounted(() => {
     border-radius: 10px;
     padding: 10px;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(var(--board-size), 1fr);
     gap: 10px;
     position: relative;
     /* 確保寬高一致，形成正方形 */

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { createTile, rotateGrid, executeMove, addRandomTile, isGameOver } from '../gameLogic';
+import { createTile, rotateGrid, executeMove, addRandomTile, isGameOver, BoardSize } from '../gameLogic';
 
 // 儲存整個遊戲狀態到 Chrome Storage
 const saveGameStateToStorage = (state) => {
@@ -180,8 +180,8 @@ export const useGameStore = defineStore('game', {
 
             const rotations = { left: 0, down: 1, right: 2, up: 3 }[direction];
 
-            // 1. 建立虛擬 4x4 網格，儲存方塊 ID，方便旋轉
-            const tileMap = Array(4).fill(null).map(() => Array(4).fill(null));
+            // 1. 建立虛擬 nxn 網格，儲存方塊 ID，方便旋轉
+            const tileMap = Array(BoardSize).fill(null).map(() => Array(BoardSize).fill(null));
             this.tiles.forEach(tile => {
                 tileMap[tile.row][tile.col] = tile.id;
             });
@@ -191,8 +191,8 @@ export const useGameStore = defineStore('game', {
 
             // 3. 根據旋轉後的網格，重映射方塊的 row/col 到新的 (左移後的位置)
             let rotatedTiles = [];
-            for (let r = 0; r < 4; r++) {
-                for (let c = 0; c < 4; c++) {
+            for (let r = 0; r < BoardSize; r++) {
+                for (let c = 0; c < BoardSize; c++) {
                     const id = rotatedMap[r][c];
                     if (id !== null) {
                         // 找到原始方塊物件
@@ -218,7 +218,7 @@ export const useGameStore = defineStore('game', {
             if (moved) {
 
                 // 創建一個新的 Map，以便反旋轉時能快速查找方塊物件
-                const movedTileMap = Array(4).fill(null).map(() => Array(4).fill(null));
+                const movedTileMap = Array(BoardSize).fill(null).map(() => Array(BoardSize).fill(null));
                 newTiles.forEach(tile => {
                     movedTileMap[tile.row][tile.col] = tile;
                 });

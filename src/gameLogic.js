@@ -1,5 +1,11 @@
 // 全域唯一的 ID 計數器
 let nextTileId = 0;
+let winTile = 2048; // 預設的勝利目標
+let boardSize = 4; // 預設的棋盤大小
+let boardWidth = 500; // 預設的棋盤寬度
+
+export const BoardSize = boardSize;
+export const BoardWidth = boardWidth;
 
 /**
  * 創建一個新的方塊物件
@@ -21,14 +27,14 @@ export const createTile = (r, c, value) => {
     };
 };
 
-// 網格旋轉函式 (保持不變，但現在處理的是虛擬網格的索引)
+// 網格順時針旋轉函式 (保持不變，但現在處理的是虛擬網格的索引)
 export const rotateGrid = (g, times) => {
     let result = g.map(row => [...row]);
     for (let t = 0; t < times; t++) {
-        const newGrid = Array(4).fill(null).map(() => Array(4).fill(0));
-        for (let r = 0; r < 4; r++) {
-            for (let c = 0; c < 4; c++) {
-                newGrid[c][3 - r] = result[r][c];
+        const newGrid = Array(boardSize).fill(null).map(() => Array(boardSize).fill(0));
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                newGrid[c][boardSize - 1 - r] = result[r][c];
             }
         }
         result = newGrid;
@@ -37,12 +43,12 @@ export const rotateGrid = (g, times) => {
 };
 
 /**
- * 將稀疏的方塊列表轉換為 4x4 的密集網格 (用於旋轉和遊戲結束檢查)
+ * 將稀疏的方塊列表轉換為 nxn 的密集網格 (用於旋轉和遊戲結束檢查)
  * @param {object[]} tiles - 方塊物件列表
- * @returns {number[][]} - 4x4 數字網格
+ * @returns {number[][]} - nxn 數字網格
  */
 const tilesToGrid = (tiles) => {
-    const grid = Array(4).fill(null).map(() => Array(4).fill(0));
+    const grid = Array(boardSize).fill(null).map(() => Array(boardSize).fill(0));
     tiles.forEach(tile => {
         if (tile.value !== 0) {
             grid[tile.row][tile.col] = tile.value;
@@ -60,8 +66,8 @@ export const addRandomTile = (currentTiles) => {
     const grid = tilesToGrid(currentTiles);
     const emptyCells = [];
 
-    for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
             if (grid[r][c] === 0) {
                 emptyCells.push({ r, c });
             }
@@ -86,10 +92,10 @@ export const isGameOver = (tiles) => {
     if (grid.some(row => row.includes(0))) return false;
 
     // 檢查是否有可合併的數字
-    for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
-            if (c < 3 && grid[r][c] === grid[r][c + 1]) return false; // 水平可合併
-            if (r < 3 && grid[r][c] === grid[r + 1][c]) return false; // 垂直可合併
+    for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+            if (c < BoardSize - 1 && grid[r][c] === grid[r][c + 1]) return false; // 水平可合併
+            if (r < BoardSize - 1 && grid[r][c] === grid[r + 1][c]) return false; // 垂直可合併
         }
     }
     return true;
@@ -116,8 +122,8 @@ export const executeMove = (currentTiles, currentScore, awardTile, canUndoTimes)
         mergedFrom: undefined
     }));
 
-    // 使用一個 4x4 網格來暫時追蹤每個位置上的方塊 ID，方便處理移動
-    const tileMap = Array(4).fill(null).map(() => Array(4).fill(null));
+    // 使用一個 nxn 網格來暫時追蹤每個位置上的方塊 ID，方便處理移動
+    const tileMap = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
     workingTiles.forEach(tile => {
         // 只有存在且未被標記為移除的方塊才會進入 map
         if (tile.value > 0) {
@@ -127,7 +133,7 @@ export const executeMove = (currentTiles, currentScore, awardTile, canUndoTimes)
 
 
     // 處理每一行（向左移動的核心邏輯）
-    for (let r = 0; r < 4; r++) {
+    for (let r = 0; r < boardSize; r++) {
         // 1. 提取出非零方塊，並記錄它們的舊位置
         let rowTiles = tileMap[r].filter(tile => tile !== null);
 
@@ -148,7 +154,8 @@ export const executeMove = (currentTiles, currentScore, awardTile, canUndoTimes)
                 rowTiles[i + 1].value = 0;
                 rowTiles[i + 1].merged = true; // 也標記為已處理 (被移除)
 
-                if (rowTiles[i].value === 2048) {
+                if (rowTiles[i].value === winTile) {
+                    winTile *= 2;
                     won = true;
                 }
             }
@@ -158,7 +165,7 @@ export const executeMove = (currentTiles, currentScore, awardTile, canUndoTimes)
         let finalRowTiles = rowTiles.filter(tile => tile.value > 0);
 
         // 4. 檢查是否有移動發生，並更新方塊位置
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < boardSize; i++) {
             const tile = finalRowTiles[i];
 
             // 檢查原先該位置是否有方塊

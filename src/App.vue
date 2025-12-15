@@ -39,7 +39,15 @@
                 <GameBoard />
 
                 <Modal v-model="showGameOverDialog" persistent max-width="320">
-                    <v-card>
+                    <v-card v-if="won">
+                        <v-card-title class="text-h6">You Win!</v-card-title>
+                        <v-card-actions>
+                            <v-btn color="primary" @click="keepGoing">Keep Going</v-btn>
+                            <v-spacer />
+                            <v-btn color="primary" @click="newGame">New Game</v-btn>
+                        </v-card-actions>
+                    </v-card>
+                    <v-card v-else>
                         <v-card-title class="text-h6">Game Over!</v-card-title>
                         <v-card-actions>
                             <v-spacer />
@@ -86,17 +94,24 @@ watch(isDarkTheme, (isDark) => {
 const gameStore = useGameStore(); // 獲取 Store 實例
 
 // 使用 storeToRefs 來解構 state 和 getters，保持響應性
-const { canUndo, canUndoTimes, isGameOver } = storeToRefs(gameStore);
+const { canUndo, canUndoTimes, isGameOver, won } = storeToRefs(gameStore);
 
 // 本地控制對話框的顯示狀態
 const showGameOverDialog = ref(false);
 
 // 監聽 Store 的 isGameOver，當遊戲結束時開啟對話框
+watch(won, (val) => {
+    if (val) showGameOverDialog.value = true;
+});
 watch(isGameOver, (val) => {
     if (val) showGameOverDialog.value = true;
 });
 
 // 直接使用 Store 上的 Action
+const keepGoing = () => {
+    showGameOverDialog.value = false;
+    gameStore.won = false;
+}
 const newGame = () => {
     showGameOverDialog.value = false;
     gameStore.newGame();
@@ -106,6 +121,7 @@ const undo = () => gameStore.undo();
 // 鍵盤控制
 const handleKeydown = (e) => {
     // 直接訪問 Store 狀態
+    if (gameStore.won) return;
     if (gameStore.isGameOver) return;
 
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
